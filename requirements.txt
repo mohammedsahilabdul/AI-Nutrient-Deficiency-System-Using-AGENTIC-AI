@@ -1,0 +1,49 @@
+# Core Dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-dotenv==1.0.0
+pydantic==2.5.0
+
+# LLM & Vision
+anthropic==0.25.1
+opencv-python==4.8.1.78
+pillow==10.1.0
+numpy==1.24.3
+torch==2.1.1
+torchvision==0.16.1
+
+# vLLM Support (Optional)
+vllm==0.2.7
+transformers==4.35.2
+
+# Web Search & Utilities
+requests==2.31.0
+beautifulsoup4==4.12.2
+google-search-results==2.4.2
+selenium==4.15.2
+
+# Database
+sqlalchemy==2.0.23
+alembic==1.13.0
+
+# Frontend
+flask==3.0.0
+flask-cors==4.0.0
+jinja2==3.1.2
+streamlit==1.28.1
+
+# Utilities
+python-multipart==0.0.6
+aiofiles==23.2.1
+logging-config==0.5.0
+
+# Email & Scheduler
+python-dateutil==2.8.2
+icalendar==5.1.1
+
+# PDF Export
+reportlab==4.0.9
+
+# API Rate Limiting & Security  
+pyjwt==2.8.1
+passlib[bcrypt]==1.7.4

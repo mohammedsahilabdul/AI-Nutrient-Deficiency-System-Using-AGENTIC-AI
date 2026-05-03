@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏥 AI Medical Diagnostic System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: #000;
+            color: white;
+            padding: 40px;
+            text-align: center;
+            border-radius: 15px 15px 0 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .main-card {
+            background: white;
+            border-radius: 0 0 15px 15px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .form-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+            flex-wrap: wrap;
+        }
+        
+        .form-tab-btn {
+            padding: 12px 20px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-weight: 600;
+            color: #999;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-size: 1em;
+        }
+        
+        .form-tab-btn:hover {
+            background: #f8f9fa;
+            color: #667eea;
+        }
+        
+        .form-tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .form-tab-content {
+            display: none;
+        }
+        
+        .form-tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .form-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .section-title {
+            font-size: 1.2em;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-weight: 600;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        .form-group {
+            margin-bottom: 5px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 8px rgba(102, 126, 234, 0.3);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .file-upload-wrapper {
+            margin-bottom: 10px;
+        }
+        
+        .file-upload {
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9ff;
+        }
+        
+        .file-upload:hover {
+            background: #f0f1ff;
+            border-color: #764ba2;
+        }
+        
+        .file-upload-icon {
+            font-size: 1.8em;
+            margin-bottom: 8px;
+        }
+        
+        .file-upload input {
+            display: none;
+        }
+        
+        .file-name {
+            font-size: 0.9em;
+            color: #667eea;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f8f9ff;
+            border-radius: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .checkbox-item label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .demo-section {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .demo-title {
+            font-weight: 600;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .demo-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        
+        .btn-demo {
+            padding: 10px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-demo:hover {
+            background: white;
+            color: #f5576c;
+        }
+        
+        .button-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+        }
+        
+        .btn-primary, .btn-secondary, .btn-tertiary {
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            grid-column: 1 / 2;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .btn-tertiary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-tertiary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            font-weight: 500;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .results-section {
+            display: none;
+            margin-top: 40px;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .results-section h2 {
+            color: #000;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        
+        .result-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            flex-wrap: wrap;
+        }
+        
+        .result-tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-weight: 600;
+            color: #999;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .result-tab:hover {
+            background: #f8f9fa;
+        }
+        
+        .result-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .result-content {
+            display: none;
+        }
+        
+        .result-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        .result-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            line-height: 1.6;
+        }
+        
+        .result-item strong {
+            color: #667eea;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-top: 8px;
+            margin-right: 5px;
+        }
+        
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .progress-indicator {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        
+        .progress-step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #999;
+        }
+        
+        .progress-step.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .progress-step.completed {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .demo-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            header h1 {
+                font-size: 1.8em;
+            }
+            
+            .section-title {
+                font-size: 1.1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏥 AI Medical Diagnostic System</h1>
+            <p>Advanced Medical Image Analysis & Diagnosis</p>
+        </header>
+        
+        <div class="main-card">
+            <!-- Messages -->
+            <div id="error" class="message error"></div>
+            <div id="success" class="message success"></div>
+            <div id="info" class="message info"></div>
+            
+            <!-- Progress Indicator -->
+            <div class="progress-indicator">
+                <div class="progress-step active" id="step1Indicator">📋 Patient Info</div>
+                <div class="progress-step" id="step2Indicator">📸 Images</div>
+                <div class="progress-step" id="step3Indicator">✅ Review</div>
+            </div>
+            
+            <!-- Quick Demo Section -->
+            <div class="demo-section">
+                <div class="demo-title">⚡ Quick Demo (1 second) - Test the system instantly</div>
+                <div class="demo-buttons">
+                    <button type="button" class="btn-demo" onclick="runDemo('anemia')">Anemia</button>
+                    <button type="button" class="btn-demo" onclick="runDemo('diabetes')">Diabetes</button>
+                    <button type="button" class="btn-demo" onclick="runDemo('infection')">Infection</button>
+                    <button type="button" class="btn-demo" onclick="runDemo('normal')">Normal</button>
+                </div>
+            </div>
+            
+            <!-- Single Interactive Form -->
+            <form id="analysisForm">
+                <!-- Form Navigation Tabs -->
+                <div class="form-tabs">
+                    <button type="button" class="form-tab-btn active" onclick="switchFormTab(event, 'step1')">📋 Patient Info</button>
+                    <button type="button" class="form-tab-btn" onclick="switchFormTab(event, 'step2')">📸 Upload Images</button>
+                    <button type="button" class="form-tab-btn" onclick="switchFormTab(event, 'step3')">✅ Review & Submit</button>
+                </div>
+                
+                <!-- Step 1: Patient Information -->
+                <div id="step1" class="form-tab-content active">
+                    <div class="form-section">
+                        <h3 class="section-title">👤 Patient Information</h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Full Name *</label>
+                                <input type="text" id="patientName" placeholder="John Doe" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Age (years) *</label>
+                                <input type="number" id="patientAge" placeholder="35" min="1" max="120" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Sex *</label>
+                                <select id="patientSex" required>
+                                    <option value="">-- Select --</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Location *</label>
+                                <input type="text" id="patientLocation" placeholder="New York" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Email *</label>
+                            <input type="email" id="patientEmail" placeholder="patient@example.com" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Medical History</label>
+                            <textarea id="medicalHistory" placeholder="Any relevant conditions, allergies, medications..." rows="4"></textarea>
+                        </div>
+                        
+                        <div class="button-container">
+                            <div></div>
+                            <button type="button" class="btn-secondary" onclick="switchFormTab(event, 'step2')">Next Step →</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 2: Medical Images -->
+                <div id="step2" class="form-tab-content">
+                    <div class="form-section">
+                        <h3 class="section-title">📸 Upload Medical Images</h3>
+                        
+                        <p style="color: #666; margin-bottom: 15px; font-size: 0.95em;">Upload clear images of each body part for analysis *</p>
+                        
+                        <div class="file-upload-wrapper">
+                            <label style="font-weight: 600; color:#333; margin-bottom: 8px;">👁️ Eye Image *</label>
+                            <div class="file-upload" onclick="document.getElementById('eyeInput').click()">
+                                <div class="file-upload-icon">👁️</div>
+                                <div id="eyeLabel">Click to upload eye image</div>
+                                <input type="file" id="eyeInput" accept="image/*" onchange="handleFileUpload('eye')">
+                                <div class="file-name" id="eyeName"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="file-upload-wrapper">
+                            <label style="font-weight: 600; color:#333; margin-bottom: 8px;">💅 Nails Image *</label>
+                            <div class="file-upload" onclick="document.getElementById('nailsInput').click()">
+                                <div class="file-upload-icon">💅</div>
+                                <div id="nailsLabel">Click to upload nails image</div>
+                                <input type="file" id="nailsInput" accept="image/*" onchange="handleFileUpload('nails')">
+                                <div class="file-name" id="nailsName"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="file-upload-wrapper">
+                            <label style="font-weight: 600; color:#333; margin-bottom: 8px;">👅 Tongue Image *</label>
+                            <div class="file-upload" onclick="document.getElementById('tongueInput').click()">
+                                <div class="file-upload-icon">👅</div>
+                                <div id="tongueLabel">Click to upload tongue image</div>
+                                <input type="file" id="tongueInput" accept="image/*" onchange="handleFileUpload('tongue')">
+                                <div class="file-name" id="tongueName"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="button-container">
+                            <button type="button" class="btn-secondary" onclick="switchFormTab(event, 'step1')">← Previous</button>
+                            <button type="button" class="btn-secondary" onclick="switchFormTab(event, 'step3')">Next Step →</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 3: Review & Submit -->
+                <div id="step3" class="form-tab-content">
+                    <div class="form-section">
+                        <h3 class="section-title">✅ Review & Submit</h3>
+                        
+                        <div style="background: #f8f9ff; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                            <h4 style="color: #667eea; margin-bottom: 10px; font-size: 1em;">📋 Summary</h4>
+                            <div id="reviewSummary" style="font-size: 0.95em; line-height: 1.8; color: #333;"></div>
+                        </div>
+                        
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="sendPDF" checked>
+                                <label for="sendPDF">Generate PDF Report</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="sendEmail" checked>
+                                <label for="sendEmail">Send Results to Email</label>
+                            </div>
+                        </div>
+                        
+                        <div id="loading" class="loading">
+                            <div class="spinner"></div>
+                            <p style="color: #667eea; font-weight: 600;">Processing analysis...</p>
+                        </div>
+                        
+                        <div class="button-container">
+                            <button type="button" class="btn-secondary" onclick="switchFormTab(event, 'step2')">← Previous</button>
+                            <button type="button" class="btn-secondary" onclick="clearForm()">Clear Form</button>
+                            <button type="button" class="btn-primary" onclick="analyzeImages(event)">🚀 Analyze Now</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Results Section (Appears below after submission) -->
+        <div class="results-section" id="resultsSection">
+            <h2>📊 Analysis Results</h2>
+            
+            <div class="result-tabs">
+                <button class="result-tab active" onclick="switchResultTab(event, 'diagnosis')">🔍 Diagnosis</button>
+                <button class="result-tab" onclick="switchResultTab(event, 'report')">📄 Medical Report</button>
+                <button class="result-tab" onclick="switchResultTab(event, 'diet')">🥗 Diet Plan</button>
+                <button class="result-tab" onclick="switchResultTab(event, 'healthcare')">🏥 Healthcare & Doctors</button>
+            </div>
+            
+            <div id="diagnosis" class="result-content active">
+                <div id="diagnosisContent"></div>
+            </div>
+            
+            <div id="report" class="result-content">
+                <div id="reportContent" style="white-space: pre-wrap; font-family: monospace; font-size: 0.9em; line-height: 1.6;"></div>
+            </div>
+            
+            <div id="diet" class="result-content">
+                <div id="dietContent" style="white-space: pre-wrap; font-family: monospace; font-size: 0.9em; line-height: 1.6;"></div>
+            </div>
+            
+            <div id="healthcare" class="result-content">
+                <div id="healthcareContent"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = 'http://localhost:8000';
+        
+        // Switch between form tabs
+        function switchFormTab(event, tabName) {
+            event.preventDefault();
+            
+            // Hide all tabs
+            document.querySelectorAll('.form-tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.form-tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            // Update progress indicator
+            updateProgressIndicator(tabName);
+            
+            // Generate summary on review tab
+            if (tabName === 'step3') {
+                generateReviewSummary();
+            }
+        }
+        
+        function updateProgressIndicator(step) {
+            document.querySelectorAll('.progress-step').forEach(s => s.classList.remove('active', 'completed'));
+            
+            if (step === 'step1') {
+                document.getElementById('step1Indicator').classList.add('active');
+            } else if (step === 'step2') {
+                document.getElementById('step1Indicator').classList.add('completed');
+                document.getElementById('step2Indicator').classList.add('active');
+            } else if (step === 'step3') {
+                document.getElementById('step1Indicator').classList.add('completed');
+                document.getElementById('step2Indicator').classList.add('completed');
+                document.getElementById('step3Indicator').classList.add('active');
+            }
+        }
+        
+        function generateReviewSummary() {
+            const name = document.getElementById('patientName').value || 'Not provided';
+            const age = document.getElementById('patientAge').value || 'Not provided';
+            const sex = document.getElementById('patientSex').value || 'Not provided';
+            const location = document.getElementById('patientLocation').value || 'Not provided';
+            const email = document.getElementById('patientEmail').value || 'Not provided';
+            const eyeFile = document.getElementById('eyeInput').files[0]?.name || 'Not uploaded ❌';
+            const nailsFile = document.getElementById('nailsInput').files[0]?.name || 'Not uploaded ❌';
+            const tongueFile = document.getElementById('tongueInput').files[0]?.name || 'Not uploaded ❌';
+            
+            const summary = `
+                <strong>👤 Patient Details:</strong><br>
+                Name: <strong>${name}</strong><br>
+                Age: <strong>${age} years</strong><br>
+                Sex: <strong>${sex}</strong><br>
+                Location: <strong>${location}</strong><br>
+                Email: <strong>${email}</strong><br><br>
+                
+                <strong>📸 Images:</strong><br>
+                👁️ Eye: ${eyeFile}<br>
+                💅 Nails: ${nailsFile}<br>
+                👅 Tongue: ${tongueFile}<br><br>
+                
+                <strong>⚙️ Options:</strong><br>
+                📄 Generate PDF: ${document.getElementById('sendPDF').checked ? '✅ Yes' : '❌ No'}<br>
+                📧 Send Email: ${document.getElementById('sendEmail').checked ? '✅ Yes' : '❌ No'}
+            `;
+            
+            document.getElementById('reviewSummary').innerHTML = summary;
+        }
+        
+        // Switch between result tabs
+        function switchResultTab(event, tabName) {
+            event.preventDefault();
+            
+            document.querySelectorAll('.result-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.result-tab').forEach(t => t.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        function handleFileUpload(type) {
+            const fileInput = document.getElementById(type + 'Input');
+            const label = document.getElementById(type + 'Label');
+            const nameDiv = document.getElementById(type + 'Name');
+            
+            if (fileInput.files[0]) {
+                const fileName = fileInput.files[0].name;
+                label.textContent = '✅ ' + fileName;
+                nameDiv.textContent = fileName;
+            }
+        }
+        
+        function showMessage(type, message) {
+            const msgDiv = document.getElementById(type);
+            msgDiv.textContent = message;
+            msgDiv.style.display = 'block';
+            if (type !== 'info') {
+                setTimeout(() => { msgDiv.style.display = 'none'; }, 6000);
+            }
+        }
+        
+        function runDemo(type) {
+            document.getElementById('loading').style.display = 'block';
+            
+            fetch(`${API_URL}/api/demo?diagnosis_type=${type}`)
+                .then(r => {
+                    if (!r.ok) throw new Error('Server error: ' + r.status);
+                    return r.json();
+                })
+                .then(data => {
+                    displayResults(data);
+                    showMessage('success', '✅ Demo analysis complete!');
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    showMessage('error', '❌ Demo failed: ' + err.message);
+                    document.getElementById('loading').style.display = 'none';
+                });
+        }
+        
+        function analyzeImages(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('patientName').value;
+            const age = document.getElementById('patientAge').value;
+            const sex = document.getElementById('patientSex').value;
+            const location = document.getElementById('patientLocation').value;
+            const email = document.getElementById('patientEmail').value;
+            const eyeFile = document.getElementById('eyeInput').files[0];
+            const nailsFile = document.getElementById('nailsInput').files[0];
+            const tongueFile = document.getElementById('tongueInput').files[0];
+            
+            if (!name || !age || !sex || !location || !email) {
+                showMessage('error', '❌ Please fill all required patient information including email');
+                return;
+            }
+            
+            if (!eyeFile || !nailsFile || !tongueFile) {
+                showMessage('error', '❌ Please upload all three medical images');
+                return;
+            }
+            
+            const maxSize = 10 * 1024 * 1024;
+            if (eyeFile.size > maxSize || nailsFile.size > maxSize || tongueFile.size > maxSize) {
+                showMessage('error', '❌ File size too large (max 10MB)');
+                return;
+            }
+            
+            document.getElementById('loading').style.display = 'block';
+            
+            const formData = new FormData();
+            formData.append('patient_name', name);
+            formData.append('patient_age', parseInt(age));
+            formData.append('patient_sex', sex);
+            formData.append('location', location);
+            const medicalHistory = document.getElementById('medicalHistory').value;
+            if (medicalHistory) formData.append('medical_history', medicalHistory);
+            formData.append('eye_image', eyeFile);
+            formData.append('nails_image', nailsFile);
+            formData.append('tongue_image', tongueFile);
+            
+            fetch(`${API_URL}/api/analyze`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+                .then(r => {
+                    if (!r.ok) {
+                        return r.json().then(data => {
+                            throw new Error(data.detail || 'Server error: ' + r.status);
+                        }).catch(e => {
+                            throw new Error('HTTP Error ' + r.status);
+                        });
+                    }
+                    return r.json();
+                })
+                .then(data => {
+                    if (data.error) throw new Error(data.error);
+                    displayResults(data);
+                    showMessage('success', '✅ Analysis complete! Results sent to email: ' + email);
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    showMessage('error', '❌ Analysis failed: ' + err.message);
+                    document.getElementById('loading').style.display = 'none';
+                });
+        }
+        
+        function displayResults(data) {
+            document.getElementById('resultsSection').style.display = 'block';
+            
+            // Diagnosis Tab
+            const diagHTML = `
+                <div class="result-item">
+                    <strong>🔍 Primary Diagnosis:</strong><br>
+                    ${data.diagnosis || 'N/A'}
+                </div>
+                <div class="result-item">
+                    <strong>⚠️ Severity:</strong> <span class="badge badge-warning">${data.severity || 'Unknown'}</span>
+                </div>
+                <div class="result-item">
+                    <strong>🎯 Confidence Score:</strong><br>
+                    ${((data.confidence || 0) * 100).toFixed(1)}%
+                </div>
+                ${data.workflow_id ? `<div class="result-item"><strong>📋 Analysis ID:</strong><br>${data.workflow_id}</div>` : ''}
+                ${data.processing_time_seconds ? `<div class="result-item"><strong>⏱️ Processing Time:</strong><br>${data.processing_time_seconds} seconds</div>` : ''}
+            `;
+            document.getElementById('diagnosisContent').innerHTML = diagHTML;
+            
+            // Report Tab
+            document.getElementById('reportContent').textContent = data.medical_report || 'No report available. Please try again.';
+            
+            // Diet Tab
+            document.getElementById('dietContent').textContent = data.diet_plan || 'No diet plan available. Please try again.';
+            
+            // Healthcare Tab
+            let healthHTML = '';
+            if (data.hospitals && data.hospitals.length > 0) {
+                healthHTML += '<h3 style="color:#667eea;margin-bottom:10px;">🏥 Nearby Hospitals</h3>';
+                data.hospitals.forEach(h => {
+                    healthHTML += `<div class="result-item">${h.name || h}</div>`;
+                });
+            }
+            if (data.specialists && data.specialists.length > 0) {
+                healthHTML += '<h3 style="color:#667eea;margin-top:15px;margin-bottom:10px;">👨‍⚕️ Recommended Specialists</h3>';
+                data.specialists.forEach(s => {
+                    healthHTML += `<span class="badge badge-success">${s}</span> `;
+                });
+            }
+            document.getElementById('healthcareContent').innerHTML = healthHTML || '<p>No healthcare information available. Please try the analysis again.</p>';
+        }
+        
+        function clearForm() {
+            document.getElementById('analysisForm').reset();
+            document.getElementById('eyeInput').value = '';
+            document.getElementById('nailsInput').value = '';
+            document.getElementById('tongueInput').value = '';
+            document.getElementById('eyeName').textContent = '';
+            document.getElementById('nailsName').textContent = '';
+            document.getElementById('tongueName').textContent = '';
+            document.getElementById('eyeLabel').textContent = 'Click to upload eye image';
+            document.getElementById('nailsLabel').textContent = 'Click to upload nails image';
+            document.getElementById('tongueLabel').textContent = 'Click to upload tongue image';
+            document.getElementById('resultsSection').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('success').style.display = 'none';
+            document.getElementById('info').style.display = 'none';
+            
+            // Reset to step 1
+            document.querySelectorAll('.form-tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.form-tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('step1').classList.add('active');
+            document.querySelectorAll('.form-tab-btn')[0].classList.add('active');
+            updateProgressIndicator('step1');
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch(`${API_URL}/health`)
+                .then(r => r.json())
+                .then(data => {
+                    showMessage('info', '✅ Server is running and ready!');
+                })
+                .catch(err => {
+                    showMessage('error', '❌ Server not running! Start with: python main_new.py');
+                });
+        });
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏥 AI Medical Diagnostic System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: #000;
+            color: white;
+            padding: 40px;
+            text-align: center;
+            border-radius: 15px 15px 0 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .main-card {
+            background: white;
+            border-radius: 0 0 15px 15px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        /* Single Form Tabs */
+        .form-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+            flex-wrap: wrap;
+        }
+        
+        .form-tab-btn {
+            padding: 12px 20px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-weight: 600;
+            color: #999;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-size: 1em;
+        }
+        
+        .form-tab-btn:hover {
+            background: #f8f9fa;
+        }
+        
+        .form-tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .form-tab-content {
+            display: none;
+        }
+        
+        .form-tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .form-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .section-title {
+            font-size: 1.2em;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-weight: 600;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        .form-group {
+            margin-bottom: 5px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 8px rgba(102, 126, 234, 0.3);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .file-upload-wrapper {
+            margin-bottom: 10px;
+        }
+        
+        .file-upload {
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9ff;
+        }
+        
+        .file-upload:hover {
+            background: #f0f1ff;
+            border-color: #764ba2;
+        }
+        
+        .file-upload-icon {
+            font-size: 1.8em;
+            margin-bottom: 8px;
+        }
+        
+        .file-upload input {
+            display: none;
+        }
+        
+        .file-name {
+            font-size: 0.9em;
+            color: #667eea;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f8f9ff;
+            border-radius: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .checkbox-item label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .demo-section {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .demo-title {
+            font-weight: 600;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .demo-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        
+        .btn-demo {
+            padding: 10px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-demo:hover {
+            background: white;
+            color: #f5576c;
+        }
+        
+        .button-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+        }
+        
+        .btn-primary, .btn-secondary, .btn-tertiary {
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            grid-column: 1 / 2;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .btn-tertiary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-tertiary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            font-weight: 500;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .results-section {
+            display: none;
+            margin-top: 40px;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .results-section h2 {
+            color: #000;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        
+        .result-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            flex-wrap: wrap;
+        }
+        
+        .result-tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-weight: 600;
+            color: #999;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .result-tab:hover {
+            background: #f8f9fa;
+        }
+        
+        .result-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .result-content {
+            display: none;
+        }
+        
+        .result-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        .result-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            line-height: 1.6;
+        }
+        
+        .result-item strong {
+            color: #667eea;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-top: 8px;
+            margin-right: 5px;
+        }
+        
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .progress-indicator {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        
+        .progress-step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #999;
+        }
+        
+        .progress-step.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .progress-step.completed {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .demo-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            header h1 {
+                font-size: 1.8em;
+            }
+            
+            .section-title {
+                font-size: 1.1em;
+            }
+        }
+    </style>
+</head>

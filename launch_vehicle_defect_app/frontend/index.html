@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Launch Vehicle PCB Defect Inspector</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #0e1525; color: #eaf0ff; }
+    .container { max-width: 980px; margin: 24px auto; padding: 16px; }
+    .card { background: #1a2337; border-radius: 12px; padding: 18px; margin-bottom: 16px; }
+    h1 { margin-top: 0; }
+    input, button { font-size: 14px; }
+    button { background: #2f80ed; border: 0; color: white; padding: 10px 16px; border-radius: 8px; cursor: pointer; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    #status { margin-top: 10px; min-height: 22px; color: #a7c2ff; }
+    #canvasWrapper { position: relative; max-width: 100%; overflow: auto; }
+    #imageCanvas { border: 1px solid #32425f; border-radius: 8px; max-width: 100%; }
+    .result { border: 1px solid #334466; border-radius: 8px; padding: 10px; margin-top: 8px; }
+    .tag { display: inline-block; background: #2b3f63; border-radius: 999px; padding: 3px 10px; margin-right: 6px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>Launch Vehicle PCB Defect Inspector</h1>
+      <p>Upload a circuit-board image. The backend predicts defect type and location.</p>
+      <div class="row">
+        <input type="file" id="imageInput" accept="image/*" />
+        <button id="analyzeBtn">Analyze Defect</button>
+      </div>
+      <div id="status"></div>
+    </div>
+
+    <div class="card">
+      <h3>Defect Localization</h3>
+      <div id="canvasWrapper">
+        <canvas id="imageCanvas"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Predictions</h3>
+      <div id="results"></div>
+    </div>
+  </div>
+
+  <script>
+    const imageInput = document.getElementById("imageInput");
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    const statusEl = document.getElementById("status");
+    const resultsEl = document.getElementById("results");
+    const canvas = document.getElementById("imageCanvas");
+    const ctx = canvas.getContext("2d");
+
+    function setStatus(msg) {
+      statusEl.textContent = msg;
+    }
+
+    function drawImage(file) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+          resolve(img);
+        };
+        img.onerror = reject;
+        img.src = URL.createObjectURL(file);
+      });
+    }
+
+    function drawBoxes(predictions) {
+      ctx.lineWidth = 3;
+      ctx.font = "14px Arial";
+      predictions.forEach((p, idx) => {
+        const color = ["#ff5f56", "#ffd166", "#06d6a0", "#4cc9f0"][idx % 4];
+        const box = p.location;
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.strokeRect(box.x, box.y, box.width, box.height);
+        const label = `${p.defect_type} (${Math.round(p.confidence * 100)}%)`;
+        ctx.fillText(label, box.x + 4, Math.max(14, box.y - 6));
+      });
+    }
+
+    function renderResults(data) {
+      resultsEl.innerHTML = "";
+      data.predictions.forEach((p) => {
+        const div = document.createElement("div");
+        div.className = "result";
+        div.innerHTML = `
+          <span class="tag">${p.defect_type}</span>
+          <span class="tag">confidence: ${Math.round(p.confidence * 100)}%</span>
+          <span class="tag">severity: ${p.severity}</span>
+          <p>${p.explanation}</p>
+          <p>location: x=${p.location.x}, y=${p.location.y}, width=${p.location.width}, height=${p.location.height}</p>
+        `;
+        resultsEl.appendChild(div);
+      });
+    }
+
+    analyzeBtn.addEventListener("click", async () => {
+      const file = imageInput.files?.[0];
+      if (!file) {
+        setStatus("Please select an image first.");
+        return;
+      }
+
+      analyzeBtn.disabled = true;
+      setStatus("Uploading image and running defect detection...");
+      resultsEl.innerHTML = "";
+
+      try {
+        await drawImage(file);
+
+        const form = new FormData();
+        form.append("image", file);
+
+        const response = await fetch("/api/analyze", {
+          method: "POST",
+          body: form
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || "Analysis failed.");
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        await drawImage(file);
+        drawBoxes(data.predictions);
+        renderResults(data);
+        setStatus(`Done. Model mode: ${data.model_used}`);
+      } catch (err) {
+        setStatus(`Error: ${err.message}`);
+      } finally {
+        analyzeBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
