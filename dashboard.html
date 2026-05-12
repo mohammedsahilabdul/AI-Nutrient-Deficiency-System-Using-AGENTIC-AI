@@ -1,0 +1,2284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏥 AI Medical Diagnostic System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -6px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--gray-800);
+        }
+
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: white;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: 280px;
+            z-index: 1000;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--gray-200);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-header p {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 24px;
+            color: var(--gray-600);
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: var(--gray-50);
+            color: var(--primary);
+            border-left-color: var(--primary);
+        }
+
+        .nav-item i {
+            width: 20px;
+            margin-right: 12px;
+            font-size: 1.125rem;
+        }
+
+        .sidebar-footer {
+            padding: 24px;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            margin-left: 0;
+        }
+
+        .header {
+            background: white;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .menu-toggle {
+            display: block;
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            color: var(--gray-600);
+            margin-right: 16px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .menu-toggle:hover {
+            background: var(--gray-100);
+            color: var(--primary);
+        }
+
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        .header-subtitle {
+            color: var(--gray-500);
+            font-size: 0.875rem;
+            margin-top: 2px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-outline {
+            background: white;
+            color: var(--gray-700);
+            border: 1px solid var(--gray-300);
+        }
+
+        .btn-outline:hover {
+            background: var(--gray-50);
+            border-color: var(--gray-400);
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: var(--gray-50);
+        }
+
+        /* Form Styles */
+        .form-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .form-header {
+            padding: 24px 24px 0 24px;
+            border-bottom: 1px solid var(--gray-200);
+            margin-bottom: 24px;
+        }
+
+        .form-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 8px;
+        }
+
+        .form-subtitle {
+            color: var(--gray-500);
+            font-size: 0.875rem;
+        }
+
+        .form-content {
+            padding: 0 24px 24px 24px;
+        }
+
+        .form-section {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 8px;
+            font-size: 0.875rem;
+        }
+
+        .form-label.required::after {
+            content: " *";
+            color: var(--danger);
+        }
+
+        .form-input {
+            padding: 12px 16px;
+            border: 2px solid var(--gray-200);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+
+        /* File Upload */
+        .upload-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .upload-card {
+            border: 2px dashed var(--gray-300);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.2s;
+            background: var(--gray-50);
+            cursor: pointer;
+        }
+
+        .upload-card:hover {
+            border-color: var(--primary);
+            background: rgba(37, 99, 235, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 2.5rem;
+            color: var(--gray-400);
+            margin-bottom: 12px;
+        }
+
+        .upload-title {
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 4px;
+        }
+
+        .upload-subtitle {
+            color: var(--gray-500);
+            font-size: 0.875rem;
+        }
+
+        .upload-input {
+            display: none;
+        }
+
+        .file-info {
+            margin-top: 12px;
+            padding: 8px 12px;
+            background: var(--success);
+            color: white;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        /* Progress Steps */
+        .progress-container {
+            margin-bottom: 24px;
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .progress-step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--gray-100);
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--gray-600);
+            transition: all 0.2s;
+        }
+
+        .progress-step.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .progress-step.completed {
+            background: var(--success);
+            color: white;
+        }
+
+        .progress-step i {
+            font-size: 0.75rem;
+        }
+
+        /* Results Section */
+        .results-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .results-header {
+            padding: 24px 24px 0 24px;
+            border-bottom: 1px solid var(--gray-200);
+            margin-bottom: 24px;
+        }
+
+        .results-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 8px;
+        }
+
+        .results-tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid var(--gray-200);
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .results-tab {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            font-weight: 500;
+            color: var(--gray-500);
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 2px solid transparent;
+        }
+
+        .results-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .results-content {
+            padding: 0 24px 24px 24px;
+        }
+
+        .result-card {
+            background: var(--gray-50);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid var(--gray-200);
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .result-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.125rem;
+        }
+
+        .result-icon.diagnosis { background: rgba(37, 99, 235, 0.1); color: var(--primary); }
+        .result-icon.report { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .result-icon.diet { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .result-icon.doctor { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+
+        .result-title {
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        .result-text {
+            color: var(--gray-700);
+            line-height: 1.6;
+        }
+
+        .result-meta {
+            display: flex;
+            gap: 16px;
+            margin-top: 12px;
+            font-size: 0.875rem;
+            color: var(--gray-500);
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+            transition: all 0.2s;
+        }
+
+        .stat-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .stat-icon.primary { background: rgba(37, 99, 235, 0.1); color: var(--primary); }
+        .stat-icon.success { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .stat-icon.warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .stat-icon.danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+            font-weight: 500;
+        }
+
+        /* Messages */
+        .message {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .message.error {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+
+        .message.success {
+            background: #f0fdf4;
+            color: #16a34a;
+            border: 1px solid #bbf7d0;
+        }
+
+        .message.info {
+            background: #eff6ff;
+            color: #2563eb;
+            border: 1px solid #bfdbfe;
+        }
+
+        .message.warning {
+            background: #fffbeb;
+            color: #d97706;
+            border: 1px solid #fed7aa;
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--gray-200);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (min-width: 1024px) {
+            .sidebar {
+                position: static;
+                transform: none;
+                width: 280px;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .menu-toggle {
+                display: none;
+            }
+
+            .header {
+                padding: 24px 32px;
+            }
+
+            .content {
+                padding: 32px;
+            }
+
+            .form-row {
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            }
+
+            .upload-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            }
+
+            .action-buttons-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 20px;
+            }
+
+            .download-buttons, .share-buttons, .next-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .action-buttons-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 18px;
+            }
+
+            .download-buttons, .share-buttons, .next-buttons {
+                flex-direction: row;
+                gap: 8px;
+            }
+
+            .download-btn, .share-btn, .next-btn {
+                flex: 1;
+                padding: 10px 12px;
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .progress-steps {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .results-tabs {
+                flex-direction: column;
+            }
+
+            .results-tab {
+                text-align: center;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .upload-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-title {
+                font-size: 1.25rem;
+            }
+
+            .header-right {
+                display: none;
+            }
+
+            .action-buttons-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .action-section {
+                padding: 16px;
+            }
+
+            .download-buttons, .share-buttons, .next-buttons {
+                gap: 8px;
+            }
+
+            .download-btn, .share-btn, .next-btn {
+                padding: 10px 12px;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Action Buttons Grid */
+        .action-buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .action-section {
+            background: var(--gray-50);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--gray-200);
+        }
+
+        .download-buttons, .share-buttons, .next-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .download-btn, .share-btn, .next-btn {
+            width: 100%;
+            justify-content: flex-start;
+            padding: 12px 16px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        @media (min-width: 1024px) {
+            .share-buttons {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+        }
+        /* Appointment Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            z-index: 1500;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            width: min(900px, 100%);
+            max-height: 90vh;
+            overflow-y: auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--gray-200);
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            color: var(--gray-500);
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: 24px;
+            display: grid;
+            gap: 20px;
+        }
+
+        .modal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+        }
+
+        .modal-section {
+            background: var(--gray-50);
+            padding: 18px;
+            border-radius: 14px;
+            border: 1px solid var(--gray-200);
+        }
+
+        .modal-section h4 {
+            margin-bottom: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        .modal-footer {
+            padding: 20px 24px 24px 24px;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .appointment-summary {
+            background: white;
+            border-radius: 12px;
+            padding: 18px;
+            border: 1px solid var(--gray-200);
+            color: var(--gray-700);
+            line-height: 1.6;
+        }
+
+        .modal-body textarea,
+        .modal-body input,
+        .modal-body select {
+            width: 100%;
+        }
+
+        .modal-body label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--gray-700);
+            font-weight: 600;
+            font-size: 0.87rem;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        @media (max-width: 1023px) {
+            .sidebar-overlay.active {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h1>🏥 MediAI</h1>
+                <p>AI Healthcare Platform</p>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-item active" data-section="home">
+                    <i class="fas fa-home"></i>
+                    Home
+                </div>
+                <div class="nav-item" data-section="diagnosis">
+                    <i class="fas fa-stethoscope"></i>
+                    New Diagnosis
+                </div>
+                <div class="nav-item" data-section="patients">
+                    <i class="fas fa-users"></i>
+                    Patients
+                </div>
+                <div class="nav-item" data-section="reports">
+                    <i class="fas fa-file-medical"></i>
+                    Reports
+                </div>
+                <div class="nav-item" data-section="appointments">
+                    <i class="fas fa-calendar-alt"></i>
+                    Appointments
+                </div>
+                <div class="nav-item" data-section="analytics">
+                    <i class="fas fa-chart-line"></i>
+                    Analytics
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    System Online
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div>
+                        <h1 class="header-title">AI Medical Diagnostic System</h1>
+                        <p class="header-subtitle">Advanced healthcare analysis platform</p>
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    <button class="btn btn-outline">
+                        <i class="fas fa-download"></i>
+                        Export
+                    </button>
+                    <button class="btn btn-primary" id="newAnalysisBtn">
+                        <i class="fas fa-plus"></i>
+                        New Analysis
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="content">
+                <!-- Home Section -->
+                <div id="homeSection" class="section active">
+                    <!-- Stats Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card fade-in">
+                            <div class="stat-header">
+                                <div class="stat-icon primary">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="stat-change positive">
+                                    <i class="fas fa-arrow-up"></i>
+                                    +12%
+                                </div>
+                            </div>
+                            <div class="stat-value">2,847</div>
+                            <div class="stat-label">Total Patients</div>
+                        </div>
+
+                        <div class="stat-card fade-in">
+                            <div class="stat-header">
+                                <div class="stat-icon success">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="stat-change positive">
+                                    <i class="fas fa-arrow-up"></i>
+                                    +8%
+                                </div>
+                            </div>
+                            <div class="stat-value">1,429</div>
+                            <div class="stat-label">Successful Diagnoses</div>
+                        </div>
+
+                        <div class="stat-card fade-in">
+                            <div class="stat-header">
+                                <div class="stat-icon warning">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="stat-change negative">
+                                    <i class="fas fa-arrow-down"></i>
+                                    -3%
+                                </div>
+                            </div>
+                            <div class="stat-value">23</div>
+                            <div class="stat-label">Pending Reviews</div>
+                        </div>
+
+                        <div class="stat-card fade-in">
+                            <div class="stat-header">
+                                <div class="stat-icon danger">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="stat-change positive">
+                                    <i class="fas fa-arrow-down"></i>
+                                    -15%
+                                </div>
+                            </div>
+                            <div class="stat-value">7</div>
+                            <div class="stat-label">Critical Cases</div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="form-container">
+                        <div class="form-header">
+                            <h2 class="form-title">Quick Actions</h2>
+                            <p class="form-subtitle">Get started with AI-powered medical analysis</p>
+                        </div>
+                        <div class="form-content">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                                <button class="btn btn-primary" style="padding: 20px; height: auto; flex-direction: column; gap: 8px;" onclick="switchSection('diagnosis')">
+                                    <i class="fas fa-stethoscope" style="font-size: 1.5rem;"></i>
+                                    <span>New Diagnosis</span>
+                                </button>
+                                <button class="btn btn-outline" style="padding: 20px; height: auto; flex-direction: column; gap: 8px;">
+                                    <i class="fas fa-users" style="font-size: 1.5rem;"></i>
+                                    <span>View Patients</span>
+                                </button>
+                                <button class="btn btn-outline" style="padding: 20px; height: auto; flex-direction: column; gap: 8px;">
+                                    <i class="fas fa-calendar-alt" style="font-size: 1.5rem;"></i>
+                                    <span>Book Appointment</span>
+                                </button>
+                                <button class="btn btn-outline" style="padding: 20px; height: auto; flex-direction: column; gap: 8px;">
+                                    <i class="fas fa-chart-line" style="font-size: 1.5rem;"></i>
+                                    <span>View Analytics</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Diagnosis Section -->
+                <div id="diagnosisSection" class="section">
+                    <!-- Progress Steps -->
+                    <div class="progress-container">
+                        <div class="progress-steps">
+                            <div class="progress-step active" id="step1">
+                                <i class="fas fa-user"></i>
+                                Patient Info
+                            </div>
+                            <div class="progress-step" id="step2">
+                                <i class="fas fa-camera"></i>
+                                Upload Images
+                            </div>
+                            <div class="progress-step" id="step3">
+                                <i class="fas fa-check"></i>
+                                Review & Analyze
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Patient Information Form -->
+                    <div class="form-container" id="patientForm">
+                        <div class="form-header">
+                            <h2 class="form-title">Patient Information</h2>
+                            <p class="form-subtitle">Please provide patient details for accurate diagnosis</p>
+                        </div>
+                        <div class="form-content">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label required">Full Name</label>
+                                    <input type="text" class="form-input" id="patientName" placeholder="John Doe">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label required">Age</label>
+                                    <input type="number" class="form-input" id="patientAge" placeholder="35" min="1" max="120">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label required">Sex</label>
+                                    <select class="form-input form-select" id="patientSex">
+                                        <option value="">Select gender</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label required">Location</label>
+                                    <input type="text" class="form-input" id="patientLocation" placeholder="New York">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label required">Email</label>
+                                    <input type="email" class="form-input" id="patientEmail" placeholder="patient@example.com">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Phone</label>
+                                    <input type="tel" class="form-input" id="patientPhone" placeholder="+1 (555) 123-4567">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Medical History</label>
+                                <textarea class="form-input form-textarea" id="medicalHistory" placeholder="Any relevant conditions, allergies, medications, or previous diagnoses..."></textarea>
+                            </div>
+
+                            <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                                <button class="btn btn-outline" onclick="switchSection('home')">Cancel</button>
+                                <button class="btn btn-primary" onclick="nextStep(2)">Next: Upload Images →</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Image Upload Form -->
+                    <div class="form-container" id="imageForm" style="display: none;">
+                        <div class="form-header">
+                            <h2 class="form-title">Medical Image Upload</h2>
+                            <p class="form-subtitle">Upload clear images of each body part for comprehensive analysis</p>
+                        </div>
+                        <div class="form-content">
+                            <div class="upload-grid">
+                                <div class="upload-card" onclick="document.getElementById('eyeInput').click()">
+                                    <div class="upload-icon">👁️</div>
+                                    <div class="upload-title">Eye Image</div>
+                                    <div class="upload-subtitle">Upload a clear photo of the eye</div>
+                                    <input type="file" class="upload-input" id="eyeInput" accept="image/*" onchange="handleFileUpload('eye')">
+                                    <div class="file-info" id="eyeFileInfo" style="display: none;"></div>
+                                </div>
+
+                                <div class="upload-card" onclick="document.getElementById('nailsInput').click()">
+                                    <div class="upload-icon">💅</div>
+                                    <div class="upload-title">Nails Image</div>
+                                    <div class="upload-subtitle">Upload a clear photo of the fingernails</div>
+                                    <input type="file" class="upload-input" id="nailsInput" accept="image/*" onchange="handleFileUpload('nails')">
+                                    <div class="file-info" id="nailsFileInfo" style="display: none;"></div>
+                                </div>
+
+                                <div class="upload-card" onclick="document.getElementById('tongueInput').click()">
+                                    <div class="upload-icon">👅</div>
+                                    <div class="upload-title">Tongue Image</div>
+                                    <div class="upload-subtitle">Upload a clear photo of the tongue</div>
+                                    <input type="file" class="upload-input" id="tongueInput" accept="image/*" onchange="handleFileUpload('tongue')">
+                                    <div class="file-info" id="tongueFileInfo" style="display: none;"></div>
+                                </div>
+                            </div>
+
+                            <div class="message info">
+                                <i class="fas fa-info-circle"></i>
+                                <div>
+                                    <strong>Upload Requirements:</strong> Maximum file size: 10MB each. Supported formats: JPG, PNG. Ensure good lighting and clear focus for accurate analysis.
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 12px; justify-content: space-between; margin-top: 24px;">
+                                <button class="btn btn-outline" onclick="prevStep(1)">← Previous</button>
+                                <button class="btn btn-primary" onclick="nextStep(3)">Review & Analyze →</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Review & Submit Form -->
+                    <div class="form-container" id="reviewForm" style="display: none;">
+                        <div class="form-header">
+                            <h2 class="form-title">Review & Submit</h2>
+                            <p class="form-subtitle">Please review your information before submitting for analysis</p>
+                        </div>
+                        <div class="form-content">
+                            <div class="result-card">
+                                <h3 style="margin-bottom: 16px; color: var(--gray-900); font-weight: 600;">📋 Summary</h3>
+                                <div id="reviewSummary" style="line-height: 1.6;">
+                                    <!-- Summary will be populated by JavaScript -->
+                                </div>
+                            </div>
+
+                            <div class="message warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <div>
+                                    <strong>Important:</strong> This AI analysis is for diagnostic assistance only and should not replace professional medical advice. For medical emergencies, please contact your nearest hospital immediately.
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 12px; justify-content: space-between; margin-top: 24px;">
+                                <button class="btn btn-outline" onclick="prevStep(2)">← Previous</button>
+                                <button class="btn btn-primary" id="analyzeBtn" onclick="startAnalysis()">
+                                    <i class="fas fa-brain"></i>
+                                    Start AI Analysis
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div class="form-container" id="loadingState" style="display: none;">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <div>
+                                <h3 style="color: var(--gray-900); margin-bottom: 8px;">AI Analysis in Progress</h3>
+                                <p style="color: var(--gray-500);">Processing your medical images... This may take a few minutes.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Results Section -->
+                    <div class="results-section" id="resultsSection" style="display: none;">
+                        <div class="results-header">
+                            <h2 class="results-title">🔍 Analysis Results</h2>
+                            <p id="resultPatientInfo" style="color: var(--gray-600); margin-top: 8px; font-size: 0.95rem;"></p>
+                        </div>
+
+                        <div class="results-tabs">
+                            <button class="results-tab active" onclick="switchResultTab('diagnosis')">Diagnosis</button>
+                            <button class="results-tab" onclick="switchResultTab('report')">Medical Report</button>
+                            <button class="results-tab" onclick="switchResultTab('diet')">Diet Plan</button>
+                            <button class="results-tab" onclick="switchResultTab('doctors')">Recommended Doctors</button>
+                        </div>
+
+                        <div class="results-content">
+                            <!-- Diagnosis Tab -->
+                            <div id="diagnosisTab" class="result-tab-content active">
+                                <div class="result-card">
+                                    <div class="result-header">
+                                        <div class="result-icon diagnosis">
+                                            <i class="fas fa-stethoscope"></i>
+                                        </div>
+                                        <h3 class="result-title">Primary Diagnosis</h3>
+                                    </div>
+                                    <div class="result-text" id="diagnosisText">
+                                        AI analysis indicates potential anemia based on nail and eye examination. Further clinical tests recommended.
+                                    </div>
+                                    <div class="result-meta">
+                                        <span><i class="fas fa-percentage"></i> Confidence: 87%</span>
+                                        <span><i class="fas fa-clock"></i> Severity: Moderate</span>
+                                    </div>
+                                </div>
+
+                                <div class="result-card">
+                                    <div class="result-header">
+                                        <div class="result-icon diagnosis">
+                                            <i class="fas fa-microscope"></i>
+                                        </div>
+                                        <h3 class="result-title">Individual Analysis</h3>
+                                    </div>
+                                    <div class="result-text">
+                                        <strong>👁️ Eye Analysis:</strong> Pale conjunctiva suggests possible anemia<br>
+                                        <strong>💅 Nail Analysis:</strong> Spoon-shaped nails (koilonychia) indicate iron deficiency<br>
+                                        <strong>👅 Tongue Analysis:</strong> Smooth tongue surface may indicate vitamin deficiencies
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Report Tab -->
+                            <div id="reportTab" class="result-tab-content">
+                                <div class="result-card">
+                                    <div class="result-header">
+                                        <div class="result-icon report">
+                                            <i class="fas fa-file-medical"></i>
+                                        </div>
+                                        <h3 class="result-title">Medical Report</h3>
+                                    </div>
+                                    <div class="result-text" id="reportText" style="white-space: pre-line;">
+PATIENT MEDICAL REPORT
+
+Patient: John Doe
+Age: 35 years
+Date: October 10, 2026
+
+CLINICAL FINDINGS:
+- Pale conjunctiva observed in eye examination
+- Koilonychia (spoon-shaped nails) present
+- Smooth tongue surface noted
+
+DIAGNOSIS:
+Suspected iron deficiency anemia with possible vitamin B12 deficiency.
+
+RECOMMENDATIONS:
+1. Complete blood count (CBC) test
+2. Iron studies (ferritin, iron, TIBC)
+3. Vitamin B12 and folate levels
+4. Consider gastrointestinal evaluation for blood loss
+5. Nutritional counseling and supplementation
+
+Follow-up in 2 weeks recommended.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Diet Tab -->
+                            <div id="dietTab" class="result-tab-content">
+                                <div class="result-card">
+                                    <div class="result-header">
+                                        <div class="result-icon diet">
+                                            <i class="fas fa-utensils"></i>
+                                        </div>
+                                        <h3 class="result-title">Personalized Diet Plan</h3>
+                                    </div>
+                                    <div class="result-text" id="dietText" style="white-space: pre-line;">
+IRON-RICH DIET PLAN FOR ANEMIA MANAGEMENT
+
+DAILY IRON REQUIREMENTS: 18mg (women), 8mg (men)
+
+HIGH-IRON FOODS TO INCLUDE:
+• Red meat, poultry, and fish
+• Leafy green vegetables (spinach, kale)
+• Fortified cereals and breads
+• Beans, lentils, and tofu
+• Nuts and seeds
+
+SAMPLE MEAL PLAN:
+
+BREAKFAST:
+- Oatmeal with iron-fortified cereal
+- Orange juice (vitamin C enhances iron absorption)
+- Handful of almonds
+
+LUNCH:
+- Grilled chicken salad with spinach
+- Lentil soup
+- Fresh fruit
+
+DINNER:
+- Lean beef stir-fry with broccoli
+- Quinoa or brown rice
+- Mixed vegetables
+
+SNACKS:
+- Apple with peanut butter
+- Greek yogurt with berries
+- Trail mix with pumpkin seeds
+
+SUPPLEMENTS:
+- Iron supplement (if prescribed by doctor)
+- Vitamin C (1000mg daily)
+- Vitamin B12 (if deficient)
+
+NOTE: Consult with healthcare provider before starting supplements.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Doctors Tab -->
+                            <div id="doctorsTab" class="result-tab-content">
+                                <div class="result-card">
+                                    <div class="result-header">
+                                        <div class="result-icon doctor">
+                                            <i class="fas fa-user-md"></i>
+                                        </div>
+                                        <h3 class="result-title">Recommended Healthcare Providers</h3>
+                                    </div>
+                                    <div class="result-text">
+                                        <div style="display: grid; gap: 12px;">
+                                            <div style="padding: 12px; background: var(--gray-50); border-radius: 6px;">
+                                                <strong>🏥 Dr. Sarah Johnson</strong><br>
+                                                <span style="color: var(--gray-600);">Hematologist • City General Hospital</span><br>
+                                                <span style="color: var(--success); font-size: 0.875rem;">⭐ 4.8/5 • Available Tomorrow</span>
+                                            </div>
+                                            <div style="padding: 12px; background: var(--gray-50); border-radius: 6px;">
+                                                <strong>🏥 Dr. Michael Chen</strong><br>
+                                                <span style="color: var(--gray-600);">Internal Medicine • Medical Center</span><br>
+                                                <span style="color: var(--success); font-size: 0.875rem;">⭐ 4.6/5 • Available This Week</span>
+                                            </div>
+                                            <div style="padding: 12px; background: var(--gray-50); border-radius: 6px;">
+                                                <strong>🏥 Dr. Emily Rodriguez</strong><br>
+                                                <span style="color: var(--gray-600);">General Physician • Community Clinic</span><br>
+                                                <span style="color: var(--success); font-size: 0.875rem;">⭐ 4.7/5 • Same Day Available</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div style="padding: 24px; border-top: 1px solid var(--gray-200);">
+                            <div class="action-buttons-grid">
+                                <div class="action-section">
+                                    <h4 style="margin-bottom: 16px; color: var(--gray-900); font-weight: 600; font-size: 1rem;">📥 Download Reports</h4>
+                                    <div class="download-buttons">
+                                        <button class="btn btn-primary download-btn" onclick="downloadMedicalReport()">
+                                            <i class="fas fa-file-medical"></i>
+                                            Download Medical Report (PDF)
+                                        </button>
+                                        <button class="btn btn-success download-btn" onclick="downloadDietPlan()">
+                                            <i class="fas fa-utensils"></i>
+                                            Download Diet Plan (PDF)
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="action-section">
+                                    <h4 style="margin-bottom: 16px; color: var(--gray-900); font-weight: 600; font-size: 1rem;">📧 Share Results</h4>
+                                    <div class="share-buttons">
+                                        <button class="btn btn-outline share-btn" onclick="emailResults()">
+                                            <i class="fas fa-envelope"></i>
+                                            Email Results
+                                        </button>
+                                        <button class="btn btn-outline share-btn" onclick="downloadCalendarInvite()">
+                                            <i class="fas fa-calendar"></i>
+                                            Calendar Invite (.ics)
+                                        </button>
+                                        <button class="btn btn-outline share-btn" onclick="shareResults()">
+                                            <i class="fas fa-share-alt"></i>
+                                            Share Link
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="action-section">
+                                    <h4 style="margin-bottom: 16px; color: var(--gray-900); font-weight: 600; font-size: 1rem;">📅 Next Steps</h4>
+                                    <div class="next-buttons">
+                                        <button class="btn btn-primary next-btn" onclick="bookAppointment()">
+                                            <i class="fas fa-calendar-alt"></i>
+                                            Book Appointment
+                                        </button>
+                                        <button class="btn btn-outline next-btn" onclick="resetForm()">
+                                            <i class="fas fa-redo"></i>
+                                            New Analysis
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Appointment Modal -->
+                <div class="modal-overlay" id="appointmentModal">
+                    <div class="modal">
+                        <div class="modal-header">
+                            <div>
+                                <h3 class="modal-title">📅 Book Appointment</h3>
+                                <p style="color: var(--gray-500); margin-top: 8px; font-size: 0.92rem;">Schedule an appointment with a recommended specialist and keep the selected patient details in the report.</p>
+                            </div>
+                            <button class="modal-close" onclick="closeAppointmentModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="modal-grid">
+                                <div class="modal-section">
+                                    <h4>Patient Details</h4>
+                                    <p id="appointmentPatientDetails" style="color: var(--gray-700); font-size: 0.95rem; line-height: 1.7;"></p>
+                                </div>
+                                <div class="modal-section">
+                                    <h4>Doctor Selection</h4>
+                                    <label for="appointmentDoctor">Choose Doctor</label>
+                                    <select id="appointmentDoctor" class="form-input form-select">
+                                        <option value="Dr. Sarah Johnson|Hematologist|City General Hospital">Dr. Sarah Johnson (Hematologist) - City General Hospital</option>
+                                        <option value="Dr. Michael Chen|Internal Medicine|Medical Center">Dr. Michael Chen (Internal Medicine) - Medical Center</option>
+                                        <option value="Dr. Emily Rodriguez|General Physician|Community Clinic">Dr. Emily Rodriguez (General Physician) - Community Clinic</option>
+                                    </select>
+                                    <label for="appointmentDate" style="margin-top: 16px;">Preferred Date</label>
+                                    <input type="date" id="appointmentDate" class="form-input" min="2026-05-10">
+                                </div>
+                                <div class="modal-section">
+                                    <h4>Time & Notes</h4>
+                                    <label for="appointmentTime">Preferred Time</label>
+                                    <select id="appointmentTime" class="form-input form-select">
+                                        <option value="09:00 AM">09:00 AM</option>
+                                        <option value="10:00 AM">10:00 AM</option>
+                                        <option value="11:00 AM">11:00 AM</option>
+                                        <option value="12:00 PM">12:00 PM</option>
+                                        <option value="02:00 PM">02:00 PM</option>
+                                        <option value="03:00 PM">03:00 PM</option>
+                                        <option value="04:00 PM">04:00 PM</option>
+                                        <option value="05:00 PM">05:00 PM</option>
+                                    </select>
+                                    <label for="appointmentNotes" style="margin-top: 16px;">Additional Notes</label>
+                                    <textarea id="appointmentNotes" class="form-input" rows="5" placeholder="Provide any specific concerns or preferences..."></textarea>
+                                </div>
+                            </div>
+
+                            <div class="appointment-summary" id="appointmentSummary">
+                                <strong>Booking Summary</strong><br>
+                                Select a doctor and date to generate a summary here.
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-outline" onclick="closeAppointmentModal()">Cancel</button>
+                            <button class="btn btn-primary" onclick="confirmAppointment()">Confirm Booking</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Other sections can be added here -->
+                <div id="patientsSection" class="section" style="display: none;">
+                    <div class="form-container">
+                        <div class="form-header">
+                            <h2 class="form-title">Patient Management</h2>
+                            <p class="form-subtitle">View and manage patient records</p>
+                        </div>
+                        <div class="form-content">
+                            <p style="text-align: center; color: var(--gray-500); padding: 40px;">
+                                Patient management features coming soon...
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Global variables
+        let currentStep = 1;
+        let uploadedFiles = {
+            eye: null,
+            nails: null,
+            tongue: null
+        };
+        let analysisResults = null;
+        let bookedAppointment = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            // Set up event listeners
+            setupEventListeners();
+
+            // Set appointment min date to today
+            const appointmentDate = document.getElementById('appointmentDate');
+            if (appointmentDate) {
+                const today = new Date().toISOString().split('T')[0];
+                appointmentDate.min = today;
+                appointmentDate.value = today;
+            }
+
+            // Show home section by default
+            switchSection('home');
+        }
+
+        function setupEventListeners() {
+            // Menu toggle for mobile
+            document.getElementById('menuToggle').addEventListener('click', toggleSidebar);
+            document.getElementById('sidebarOverlay').addEventListener('click', closeSidebar);
+
+            // Navigation items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const section = this.dataset.section;
+                    switchSection(section);
+                    closeSidebar();
+                });
+            });
+
+            // New analysis button
+            document.getElementById('newAnalysisBtn').addEventListener('click', () => switchSection('diagnosis'));
+        }
+
+        function getPatientDetails() {
+            return {
+                name: document.getElementById('patientName').value || 'Not provided',
+                age: document.getElementById('patientAge').value || 'Not provided',
+                sex: document.getElementById('patientSex').value || 'Not provided',
+                location: document.getElementById('patientLocation').value || 'Not provided',
+                email: document.getElementById('patientEmail').value || 'Not provided',
+                phone: document.getElementById('patientPhone').value || 'Not provided',
+                history: document.getElementById('medicalHistory').value || 'None provided'
+            };
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+        }
+
+        function switchSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+                section.style.display = 'none';
+            });
+
+            // Show selected section
+            const targetSection = document.getElementById(sectionName + 'Section');
+            if (targetSection) {
+                targetSection.classList.add('active');
+                targetSection.style.display = 'block';
+            }
+
+            // Update navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`[data-section="${sectionName}"]`).classList.add('active');
+
+            // Reset diagnosis form if switching to diagnosis
+            if (sectionName === 'diagnosis') {
+                resetDiagnosisForm();
+            }
+        }
+
+        function resetDiagnosisForm() {
+            currentStep = 1;
+            uploadedFiles = { eye: null, nails: null, tongue: null };
+
+            // Reset forms
+            document.getElementById('patientForm').style.display = 'block';
+            document.getElementById('imageForm').style.display = 'none';
+            document.getElementById('reviewForm').style.display = 'none';
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('resultsSection').style.display = 'none';
+
+            // Reset progress
+            updateProgressSteps(1);
+
+            // Clear form inputs
+            document.getElementById('patientName').value = '';
+            document.getElementById('patientAge').value = '';
+            document.getElementById('patientSex').value = '';
+            document.getElementById('patientLocation').value = '';
+            document.getElementById('patientEmail').value = '';
+            document.getElementById('patientPhone').value = '';
+            document.getElementById('medicalHistory').value = '';
+
+            // Clear file uploads
+            document.getElementById('eyeFileInfo').style.display = 'none';
+            document.getElementById('nailsFileInfo').style.display = 'none';
+            document.getElementById('tongueFileInfo').style.display = 'none';
+        }
+
+        function nextStep(step) {
+            if (step === 2 && currentStep === 1) {
+                const name = document.getElementById('patientName').value;
+                const age = document.getElementById('patientAge').value;
+                const location = document.getElementById('patientLocation').value;
+                const email = document.getElementById('patientEmail').value;
+
+                if (!name || !age || !location || !email) {
+                    showMessage('You can upload images now. Please complete the required patient fields before reviewing and analyzing.', 'warning');
+                }
+                currentStep = step;
+                showStep(step);
+                updateProgressSteps(step);
+                return;
+            }
+
+            if (validateCurrentStep()) {
+                currentStep = step;
+                showStep(step);
+                updateProgressSteps(step);
+            }
+        }
+
+        function prevStep(step) {
+            currentStep = step;
+            showStep(step);
+            updateProgressSteps(step);
+        }
+
+        function showStep(step) {
+            // Hide all forms
+            document.getElementById('patientForm').style.display = 'none';
+            document.getElementById('imageForm').style.display = 'none';
+            document.getElementById('reviewForm').style.display = 'none';
+
+            // Show current step
+            if (step === 1) {
+                document.getElementById('patientForm').style.display = 'block';
+            } else if (step === 2) {
+                document.getElementById('imageForm').style.display = 'block';
+            } else if (step === 3) {
+                updateReviewSummary();
+                document.getElementById('reviewForm').style.display = 'block';
+            }
+        }
+
+        function updateProgressSteps(activeStep) {
+            const steps = document.querySelectorAll('.progress-step');
+            steps.forEach((step, index) => {
+                const stepNum = index + 1;
+                step.classList.remove('active', 'completed');
+
+                if (stepNum === activeStep) {
+                    step.classList.add('active');
+                } else if (stepNum < activeStep) {
+                    step.classList.add('completed');
+                }
+            });
+        }
+
+        function validateCurrentStep() {
+            if (currentStep === 1) {
+                const name = document.getElementById('patientName').value;
+                const age = document.getElementById('patientAge').value;
+                const location = document.getElementById('patientLocation').value;
+                const email = document.getElementById('patientEmail').value;
+
+                if (!name || !age || !location || !email) {
+                    showMessage('Please fill in all required fields: Name, Age, Location, and Email.', 'error');
+                    return false;
+                }
+
+                if (!email.includes('@')) {
+                    showMessage('Please enter a valid email address.', 'error');
+                    return false;
+                }
+            } else if (currentStep === 2) {
+                if (!uploadedFiles.eye || !uploadedFiles.nails || !uploadedFiles.tongue) {
+                    showMessage('Please upload all three medical images.', 'error');
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function handleFileUpload(type) {
+            const input = document.getElementById(type + 'Input');
+            const fileInfo = document.getElementById(type + 'FileInfo');
+
+            if (input.files[0]) {
+                const file = input.files[0];
+
+                // Check file size (10MB limit)
+                if (file.size > 10 * 1024 * 1024) {
+                    showMessage('File size too large. Maximum size is 10MB.', 'error');
+                    input.value = '';
+                    return;
+                }
+
+                uploadedFiles[type] = file;
+                fileInfo.textContent = `✓ ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`;
+                fileInfo.style.display = 'block';
+
+                // Update upload card appearance
+                const card = input.closest('.upload-card');
+                card.style.borderColor = 'var(--success)';
+                card.style.background = 'rgba(16, 185, 129, 0.05)';
+            }
+        }
+
+        function updateReviewSummary() {
+            const details = getPatientDetails();
+            const summary = `
+                <strong>👤 Patient Information:</strong><br>
+                Name: ${details.name}<br>
+                Age: ${details.age} years<br>
+                Sex: ${details.sex}<br>
+                Location: ${details.location}<br>
+                Email: ${details.email}<br>
+                Phone: ${details.phone}<br><br>
+
+                <strong>📋 Medical History:</strong><br>
+                ${details.history}<br><br>
+
+                <strong>📸 Uploaded Images:</strong><br>
+                👁️ Eye: ${uploadedFiles.eye ? '✓ ' + uploadedFiles.eye.name : '❌ Not uploaded'}<br>
+                💅 Nails: ${uploadedFiles.nails ? '✓ ' + uploadedFiles.nails.name : '❌ Not uploaded'}<br>
+                👅 Tongue: ${uploadedFiles.tongue ? '✓ ' + uploadedFiles.tongue.name : '❌ Not uploaded'}
+            `;
+
+            document.getElementById('reviewSummary').innerHTML = summary;
+        }
+
+        function startAnalysis() {
+            const details = getPatientDetails();
+            analysisResults = {
+                ...details,
+                diagnosis: `AI analysis indicates potential anemia based on nail and eye examination. Further clinical tests are recommended for ${details.name}.`,
+                report: `PATIENT MEDICAL REPORT\n\nPatient: ${details.name}\nAge: ${details.age} years\nSex: ${details.sex}\nLocation: ${details.location}\nEmail: ${details.email}\nPhone: ${details.phone}\n\nCLINICAL FINDINGS:\n- Pale conjunctiva observed in eye examination\n- Koilonychia (spoon-shaped nails) present\n- Smooth tongue surface noted\n\nMEDICAL HISTORY:\n${details.history}\n\nDIAGNOSIS:\nSuspected iron deficiency anemia with possible vitamin B12 deficiency.\n\nRECOMMENDATIONS:\n1. Complete blood count (CBC) test\n2. Iron studies (ferritin, iron, TIBC)\n3. Vitamin B12 and folate levels\n4. Consider gastrointestinal evaluation for blood loss\n5. Nutritional counseling and supplementation\n\nFollow-up in 2 weeks recommended.`,
+                diet_plan: `IRON-RICH DIET PLAN FOR ANEMIA MANAGEMENT\n\nPatient: ${details.name}\nAge: ${details.age} years\n\nDAILY IRON REQUIREMENTS: 18mg (women), 8mg (men)\n\nHIGH-IRON FOODS TO INCLUDE:\n• Red meat, poultry, and fish\n• Leafy green vegetables (spinach, kale)\n• Fortified cereals and breads\n• Beans, lentils, and tofu\n• Nuts and seeds\n\nSAMPLE MEAL PLAN:\nBREAKFAST:\n- Oatmeal with iron-fortified cereal\n- Orange juice (vitamin C enhances iron absorption)\n- Handful of almonds\n\nLUNCH:\n- Grilled chicken salad with spinach\n- Lentil soup\n- Fresh fruit\n\nDINNER:\n- Lean beef stir-fry with broccoli\n- Quinoa or brown rice\n- Mixed vegetables\n\nSNACKS:\n- Apple with peanut butter\n- Greek yogurt with berries\n- Trail mix with pumpkin seeds\n\nSUPPLEMENTS:\n- Iron supplement (if prescribed by doctor)\n- Vitamin C (1000mg daily)\n- Vitamin B12 (if deficient)\n\nNOTE: Consult with healthcare provider before starting supplements.",
+                doctors: [
+                    { name: 'Dr. Sarah Johnson', specialty: 'Hematologist', hospital: 'City General Hospital', rating: '4.8/5' },
+                    { name: 'Dr. Michael Chen', specialty: 'Internal Medicine', hospital: 'Medical Center', rating: '4.6/5' },
+                    { name: 'Dr. Emily Rodriguez', specialty: 'General Physician', hospital: 'Community Clinic', rating: '4.7/5' }
+                ],
+                topRecommendation: { doctor: 'Dr. Sarah Johnson', hospital: 'City General Hospital', specialty: 'Hematologist', rating: '4.8/5' }
+            };
+
+            document.getElementById('diagnosisText').textContent = analysisResults.diagnosis;
+            document.getElementById('reportText').textContent = analysisResults.report;
+            document.getElementById('dietText').textContent = analysisResults.diet_plan;
+            document.getElementById('resultPatientInfo').textContent = `Patient: ${details.name} • Age: ${details.age} • Sex: ${details.sex} • Location: ${details.location}`;
+
+            // Hide review form and show loading
+            document.getElementById('reviewForm').style.display = 'none';
+            document.getElementById('loadingState').style.display = 'block';
+
+            // Simulate analysis process
+            setTimeout(() => {
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('resultsSection').style.display = 'block';
+                showMessage('AI analysis completed successfully!', 'success');
+            }, 3000);
+        }
+
+        function switchResultTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.result-tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.results-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function resetForm() {
+            resetDiagnosisForm();
+            switchSection('home');
+        }
+
+        function showMessage(message, type = 'info') {
+            // Remove existing messages
+            const existingMessages = document.querySelectorAll('.message');
+            existingMessages.forEach(msg => {
+                if (!msg.classList.contains('info') || msg.classList.contains('error') || msg.classList.contains('success')) {
+                    msg.remove();
+                }
+            });
+
+            // Create new message
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.innerHTML = `
+                <i class="fas fa-${type === 'error' ? 'exclamation-circle' : type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+                ${message}
+            `;
+
+            // Insert at the top of content
+            const content = document.querySelector('.content');
+            content.insertBefore(messageDiv, content.firstChild);
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.remove();
+                }
+            }, 5000);
+        }
+
+        function openAppointmentModal() {
+            const details = getPatientDetails();
+            const summary = `Name: ${details.name} \nAge: ${details.age} years \nSex: ${details.sex} \nLocation: ${details.location} \nEmail: ${details.email} \nPhone: ${details.phone} \nMedical History: ${details.history}`;
+            document.getElementById('appointmentPatientDetails').textContent = summary;
+            document.getElementById('appointmentSummary').innerHTML = '<strong>Booking Summary</strong><br>Select a doctor and date to generate a summary here.';
+            document.getElementById('appointmentModal').classList.add('active');
+        }
+
+        function closeAppointmentModal() {
+            document.getElementById('appointmentModal').classList.remove('active');
+        }
+
+        function confirmAppointment() {
+            const doctorValue = document.getElementById('appointmentDoctor').value;
+            const [doctorName, specialty, hospitalName] = doctorValue.split('|');
+            const date = document.getElementById('appointmentDate').value;
+            const time = document.getElementById('appointmentTime').value;
+            const notes = document.getElementById('appointmentNotes').value;
+            const details = getPatientDetails();
+
+            if (!date) {
+                showMessage('Please select a preferred appointment date.', 'error');
+                return;
+            }
+
+            bookedAppointment = {
+                doctor: doctorName,
+                specialty,
+                hospital: hospitalName,
+                date,
+                time,
+                notes,
+                patient: details
+            };
+
+            document.getElementById('appointmentSummary').innerHTML = `
+                <strong>Appointment Confirmed</strong><br>
+                Doctor: ${doctorName}<br>
+                Specialty: ${specialty}<br>
+                Hospital: ${hospitalName}<br>
+                Date: ${date}<br>
+                Time: ${time}<br>
+                Notes: ${notes || 'None'}<br>
+                <br>
+                The email feature will include these booking details when you send the results.
+            `;
+
+            showMessage('Appointment details saved. You can now email the report with booking info.', 'success');
+        }
+
+        function bookAppointment() {
+            if (!validateCurrentStep()) {
+                showMessage('Please complete the patient details and image upload before booking.', 'error');
+                return;
+            }
+            openAppointmentModal();
+        }
+
+        // Simulate real-time updates
+        setInterval(() => {
+            // Update stats randomly for demo
+            const stats = document.querySelectorAll('.stat-value');
+            stats.forEach(stat => {
+                const currentValue = parseInt(stat.textContent.replace(',', ''));
+                const change = Math.floor(Math.random() * 20) - 10; // -10 to +10
+                const newValue = Math.max(0, currentValue + change);
+                stat.textContent = newValue.toLocaleString();
+            });
+        }, 30000);
+
+        // PDF Download Functions
+        function downloadMedicalReport() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const details = getPatientDetails();
+
+            // Add header
+            doc.setFontSize(20);
+            doc.setFont('helvetica', 'bold');
+            doc.text('AI Medical Diagnostic System', 105, 20, { align: 'center' });
+
+            doc.setFontSize(16);
+            doc.text('Medical Report', 105, 35, { align: 'center' });
+
+            // Patient info
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            let yPos = 55;
+            doc.text(`Patient Name: ${details.name}`, 20, yPos);
+            doc.text(`Age: ${details.age} years`, 20, yPos + 10);
+            doc.text(`Sex: ${details.sex}`, 20, yPos + 20);
+            doc.text(`Location: ${details.location}`, 20, yPos + 30);
+            doc.text(`Email: ${details.email}`, 20, yPos + 40);
+            doc.text(`Phone: ${details.phone}`, 20, yPos + 50);
+            yPos += 20;
+            doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, yPos + 40);
+
+            // Medical history
+            yPos += 60;
+            doc.setFont('helvetica', 'bold');
+            doc.text('Medical History:', 20, yPos);
+            doc.setFont('helvetica', 'normal');
+            const historyLines = doc.splitTextToSize(details.history, 170);
+            doc.text(historyLines, 20, yPos + 10);
+
+            // Diagnosis
+            yPos += 20 + (historyLines.length * 5);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Diagnosis:', 20, yPos);
+            doc.setFont('helvetica', 'normal');
+            const diagnosis = document.getElementById('diagnosisText').textContent;
+            const diagnosisLines = doc.splitTextToSize(diagnosis, 170);
+            doc.text(diagnosisLines, 20, yPos + 10);
+
+            // Medical Report
+            yPos += 40 + (diagnosisLines.length * 5);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Medical Report:', 20, yPos);
+            doc.setFont('helvetica', 'normal');
+            const reportText = document.getElementById('reportText').textContent;
+            const reportLines = doc.splitTextToSize(reportText, 170);
+            doc.text(reportLines, 20, yPos + 10);
+
+            // Footer
+            const pageHeight = doc.internal.pageSize.height;
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'italic');
+            doc.text('This report is generated by AI for diagnostic assistance only.', 20, pageHeight - 20);
+            doc.text('Please consult with a healthcare professional for medical advice.', 20, pageHeight - 10);
+
+            // Download
+            const fileName = `medical_report_${new Date().toISOString().slice(0, 19).replace(/:/g, '')}.pdf`;
+            doc.save(fileName);
+
+            showMessage('Medical report downloaded successfully!', 'success');
+        }
+
+        function downloadDietPlan() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const details = getPatientDetails();
+
+            // Add header
+            doc.setFontSize(20);
+            doc.setFont('helvetica', 'bold');
+            doc.text('AI Medical Diagnostic System', 105, 20, { align: 'center' });
+
+            doc.setFontSize(16);
+            doc.text('Personalized Diet Plan', 105, 35, { align: 'center' });
+
+            // Patient info
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            let yPos = 55;
+            doc.text(`Patient Name: ${details.name}`, 20, yPos);
+            doc.text(`Age: ${details.age} years`, 20, yPos + 10);
+            doc.text(`Sex: ${details.sex}`, 20, yPos + 20);
+            doc.text(`Location: ${details.location}`, 20, yPos + 30);
+            doc.text(`Email: ${details.email}`, 20, yPos + 40);
+            doc.text(`Phone: ${details.phone}`, 20, yPos + 50);
+            yPos += 20;
+            doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, yPos + 40);
+
+            // Medical history
+            yPos += 60;
+            doc.setFont('helvetica', 'bold');
+            doc.text('Medical History:', 20, yPos);
+            doc.setFont('helvetica', 'normal');
+            const historyLines = doc.splitTextToSize(details.history, 170);
+            doc.text(historyLines, 20, yPos + 10);
+
+            // Diet Plan
+            yPos += 20 + (historyLines.length * 5);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Personalized Diet Plan:', 20, yPos);
+            doc.setFont('helvetica', 'normal');
+            const dietText = document.getElementById('dietText').textContent;
+            const dietLines = doc.splitTextToSize(dietText, 170);
+            doc.text(dietLines, 20, yPos + 10);
+
+            // Footer
+            const pageHeight = doc.internal.pageSize.height;
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'italic');
+            doc.text('This diet plan is generated by AI for nutritional guidance only.', 20, pageHeight - 20);
+            doc.text('Please consult with a healthcare professional or registered dietitian.', 20, pageHeight - 10);
+
+            // Download
+            const fileName = `diet_plan_${new Date().toISOString().slice(0, 19).replace(/:/g, '')}.pdf`;
+            doc.save(fileName);
+
+            showMessage('Diet plan downloaded successfully!', 'success');
+        }
+
+        // Email Functions
+        function generateICalendarInvite() {
+            if (!bookedAppointment) return null;
+
+            const apt = bookedAppointment;
+            const details = getPatientDetails();
+            
+            // Parse date and time
+            const [year, month, day] = apt.date.split('-');
+            const [time, period] = apt.time.split(' ');
+            const [hours, minutes] = time.split(':');
+            let hour24 = parseInt(hours);
+            if (period === 'PM' && hour24 !== 12) hour24 += 12;
+            if (period === 'AM' && hour24 === 12) hour24 = 0;
+            
+            const startTime = `${year}${month}${day}T${String(hour24).padStart(2, '0')}${minutes}00`;
+            const endTime = `${year}${month}${day}T${String(hour24 + 1).padStart(2, '0')}${minutes}00`;
+            
+            const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//AI Medical System//EN
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+DTSTART:${startTime}
+DTEND:${endTime}
+DTSTAMP:${new Date().toISOString().replace(/[:-]/g, '').split('.')[0]}Z
+UID:${Math.random().toString(36).substr(2, 9)}@medical-system.local
+CREATED:${new Date().toISOString().replace(/[:-]/g, '').split('.')[0]}Z
+DESCRIPTION:Medical Appointment with ${apt.doctor}\\n${apt.hospital}\\nSpecialty: ${apt.specialty}\\nNotes: ${apt.notes || 'No additional notes'}\\nPatient: ${details.name}\\nAge: ${details.age}
+LOCATION:${apt.hospital}
+SUMMARY:Appointment with ${apt.doctor} - ${apt.specialty}
+STATUS:CONFIRMED
+SEQUENCE:0
+END:VEVENT
+END:VCALENDAR`;
+            
+            return icsContent;
+        }
+
+        function downloadCalendarInvite() {
+            const icsContent = generateICalendarInvite();
+            if (!icsContent) {
+                showMessage('Please book an appointment first before downloading the calendar invite.', 'error');
+                return;
+            }
+            
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/calendar;charset=utf-8,' + encodeURIComponent(icsContent));
+            element.setAttribute('download', `appointment_${new Date().toISOString().slice(0, 10)}.ics`);
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+            
+            showMessage('Calendar invite downloaded! Add it to your calendar app.', 'success');
+        }
+
+        function emailResults() {
+            const details = getPatientDetails();
+            const patientEmail = details.email;
+            if (!patientEmail || patientEmail === 'Not provided') {
+                showMessage('Please provide an email address in the patient information.', 'error');
+                return;
+            }
+
+            // Create email content
+            const subject = encodeURIComponent('AI Medical Diagnostic Results & Appointment Details');
+            const bodyLines = [];
+            bodyLines.push(`Dear ${details.name},`);
+            bodyLines.push('');
+            bodyLines.push('Thank you for using the AI Medical Diagnostic System.');
+            bodyLines.push('Please find your comprehensive medical analysis and appointment details below.');
+            bodyLines.push('');
+            bodyLines.push('═══════════════════════════════════════');
+            bodyLines.push('PATIENT INFORMATION');
+            bodyLines.push('═══════════════════════════════════════');
+            bodyLines.push(`Name: ${details.name}`);
+            bodyLines.push(`Age: ${details.age}`);
+            bodyLines.push(`Sex: ${details.sex || 'Not specified'}`);
+            bodyLines.push(`Location: ${details.location}`);
+            bodyLines.push(`Email: ${details.email}`);
+            bodyLines.push(`Phone: ${details.phone}`);
+            bodyLines.push('');
+            bodyLines.push('═══════════════════════════════════════');
+            bodyLines.push('MEDICAL HISTORY');
+            bodyLines.push('═══════════════════════════════════════');
+            bodyLines.push(details.history || 'No medical history provided');
+            bodyLines.push('');
+            bodyLines.push('═══════════════════════════════════════');
+            bodyLines.push('DIAGNOSIS SUMMARY');
+            bodyLines.push('═══════════════════════════════════════');
+            bodyLines.push(document.getElementById('diagnosisText').textContent);
+            bodyLines.push('');
+            bodyLines.push('═══════════════════════════════════════');
+            bodyLines.push('MEDICAL REPORT');
+            bodyLines.push('═══════════════════════════════════════');
+            bodyLines.push(document.getElementById('reportText').textContent);
+            bodyLines.push('');
+            bodyLines.push('═══════════════════════════════════════');
+            bodyLines.push('PERSONALIZED DIET PLAN');
+            bodyLines.push('═══════════════════════════════════════');
+            bodyLines.push(document.getElementById('dietText').textContent);
+            bodyLines.push('');
+            bodyLines.push('═══════════════════════════════════════');
+            bodyLines.push('RECOMMENDED DOCTORS & HOSPITALS');
+            bodyLines.push('═══════════════════════════════════════');
+            bodyLines.push('• Dr. Sarah Johnson (Hematologist) - City General Hospital - ⭐ 4.8/5');
+            bodyLines.push('• Dr. Michael Chen (Internal Medicine) - Medical Center - ⭐ 4.6/5');
+            bodyLines.push('• Dr. Emily Rodriguez (General Physician) - Community Clinic - ⭐ 4.7/5');
+            bodyLines.push('');
+            
+            if (bookedAppointment) {
+                bodyLines.push('═══════════════════════════════════════');
+                bodyLines.push('APPOINTMENT CONFIRMED ✓');
+                bodyLines.push('═══════════════════════════════════════');
+                bodyLines.push(`Doctor: Dr. ${bookedAppointment.doctor}`);
+                bodyLines.push(`Specialty: ${bookedAppointment.specialty}`);
+                bodyLines.push(`Hospital: ${bookedAppointment.hospital}`);
+                bodyLines.push(`Date: ${new Date(bookedAppointment.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`);
+                bodyLines.push(`Time: ${bookedAppointment.time}`);
+                bodyLines.push(`Notes: ${bookedAppointment.notes || 'No additional notes'}`);
+                bodyLines.push('');
+                bodyLines.push('📎 Calendar Invite (.ics file) Attached - Add to your calendar application');
+                bodyLines.push('');
+            }
+            
+            bodyLines.push('═══════════════════════════════════════');
+            bodyLines.push('IMPORTANT DISCLAIMER');
+            bodyLines.push('═══════════════════════════════════════');
+            bodyLines.push('This AI analysis is for diagnostic assistance only and should NOT replace professional medical advice.');
+            bodyLines.push('For medical emergencies, please contact your nearest hospital immediately.');
+            bodyLines.push('Please consult with a healthcare professional for proper diagnosis and treatment.');
+            bodyLines.push('');
+            bodyLines.push('Best regards,');
+            bodyLines.push('AI Medical Diagnostic System');
+            bodyLines.push(`Report Generated: ${new Date().toLocaleString()}`);
+
+            const mailtoLink = `mailto:${patientEmail}?subject=${subject}&body=${encodeURIComponent(bodyLines.join('\n'))}`;
+
+            // Open email client
+            window.open(mailtoLink);
+
+            // If appointment is booked, also suggest downloading the calendar invite
+            if (bookedAppointment) {
+                showMessage('Email client opened! Remember to attach the calendar invite using the "Download Calendar Invite" button.', 'info');
+            } else {
+                showMessage('Email client opened with results. Please attach the downloaded PDFs and send.', 'info');
+            }
+        }
+
+        // Share Functions
+        function shareResults() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'AI Medical Diagnostic Results',
+                    text: 'Check out my AI medical diagnostic results',
+                    url: window.location.href
+                }).catch(console.error);
+            } else {
+                // Fallback: copy URL to clipboard
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    showMessage('Results link copied to clipboard!', 'success');
+                }).catch(() => {
+                    showMessage('Unable to share results. Please copy the URL manually.', 'error');
+                });
+            }
+        }
+
+        // Book Appointment Function
+        function bookAppointment() {
+            showMessage('Appointment booking feature coming soon! Please contact recommended doctors directly.', 'info');
+        }
+    </script>
+</body>
+</html>
