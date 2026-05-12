@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+  body {
+    @apply min-h-screen bg-zinc-950 text-zinc-100;
+    background-image:
+      radial-gradient(ellipse 120% 80% at 50% -20%, rgba(59, 130, 246, 0.12), transparent),
+      radial-gradient(ellipse 80% 50% at 100% 50%, rgba(139, 92, 246, 0.08), transparent),
+      radial-gradient(ellipse 60% 40% at 0% 80%, rgba(34, 211, 238, 0.06), transparent);
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply border border-white/[0.08] bg-white/[0.03] backdrop-blur-xl;
+  }
+  .glass-strong {
+    @apply border border-white/[0.1] bg-white/[0.06] backdrop-blur-2xl;
+  }
+  .text-gradient {
+    @apply bg-gradient-to-r from-cyan-300 via-blue-400 to-violet-400 bg-clip-text text-transparent;
+  }
+  .ring-glow {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.06),
+      0 0 32px -8px rgba(56, 189, 248, 0.15);
+  }
+}
+
+/* Recharts dark theme tweaks */
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: rgba(255, 255, 255, 0.06);
+}
